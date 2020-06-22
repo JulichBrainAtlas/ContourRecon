@@ -17,6 +17,7 @@ git clone https://github.com/JulichBrainAtlas/ContourRecon
 
 ## Dependencies
 * HIToolsCore
+* ImageMagick
 
 ## Versioning
 0.8.2 alpha
