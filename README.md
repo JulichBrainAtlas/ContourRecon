@@ -1,6 +1,6 @@
 # ContourRecon
 
-Collection of Perl scripts for processing xml contour files from a mapping project as to part of the probabilistic cytoarchitectonic Julich-Brain Atlas.
+Collection of Perl scripts for processing xml contour files from a mapping project as part of the probabilistic cytoarchitectonic Julich-Brain Atlas.
 
 Repository: <https://github.com/JulichBrainAtlas/ContouRecon>
 
