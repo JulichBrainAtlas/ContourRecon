@@ -277,7 +277,6 @@ sub clusterLabelData {
 # does NOT correct black (background) holes in a mpm data set
 sub createFilledHolesDataset {
  my ($infilename,$side,$verbose,$overwrite,$debuglevel) = @_;
- ### (original code is in '$HOME/Partners/BenSigl/outcome/mpm/cleanmpm.pl')
   my $outcfilename = "mpmtable_lnormalized_".$side;
   my @outfiles = ();
   my $nonzeroliststr = `hitHistogram -i $infilename -nonzero:list -stdout`;
