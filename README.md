@@ -16,6 +16,7 @@ git clone https://github.com/JulichBrainAtlas/ContourRecon
 ## Usage
 
 ## Dependencies
+* Some non-standard Perl modules
 * HIToolsCore
 * ImageMagick
 
