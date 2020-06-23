@@ -29,8 +29,6 @@ git clone https://github.com/JulichBrainAtlas/ContourRecon
 * Prof. Dr. Katrin Amunts
 * Dr. Sebastian Bludau
 
-## Reference
-
 <!-- ## License
 
 Apache 2.0 -->
