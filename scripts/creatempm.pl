@@ -1,3 +1,18 @@
+# Copyright 2020 Forschungszentrum Jülich
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+##################################################################################################################################
 # Creating maximum probability map of the volume or on the surface for a single project
 ##################################################################################################################################
 
@@ -31,7 +46,10 @@ printfatalerror "FATAL ERROR: Invalid atlas path '".$ATLASPATH."': $!" unless ( 
 my $DATABASEPATH = $ENV{DATABASEPATH};
 printfatalerror "FATAL ERROR: Invalid database path '".$DATABASEPATH."': $!" unless ( -d $DATABASEPATH );
 my $canvas = "data/canvas/canvas_black4pdf.png";
+printfatalerror "FATAL ERROR: Missing canvas file '".$canvas."': $!" unless ( -e $canvas );
 my $GLOBALCOLORMAPFILE = "data/colors.cmap";
+printfatalerror "FATAL ERROR: Missing colormap file '".$GLOBALCOLORMAPFILE."': $!" unless ( -e $GLOBALCOLORMAPFILE );
+### >>>
 my @gcolors= ();
 my $timestamp = sprintf "%06x",int(rand(100000));
 my $tmp = "tmp/tmp".$timestamp;
@@ -580,11 +598,11 @@ sub createTabImage {
   $wopts .= " -gravity SouthEast -draw \"text 25,25 \'$watermarktext\'\"";
   $wopts .= " miff:- | composite -tile -";
   ssystem("convert $wopts $tabout $watermarkout",$debug);
-  copy($watermarkout,$tmpAtlasFile) || printfatalerror "FATAL ERROR: Could not copy: $!";
+  copy($watermarkout,$tmpAtlasFile) || printfatalerror "FATAL ERROR: Cannot copy: $!";
  } else {
   copy($tabout,$tmpAtlasFile) || printfatalerror "FATAL ERROR: Cannot copy: $!";
  }
- my $finalout = createOutputPath("$atlasDataCorePath/pics");
+ my $finalout = createOutputPath($atlasDataCorePath."/pics");
  $nprojects = $numAreas;
  $finalout .= "/${atlasname}_${side}_N${nprojects}_nlin2Std${refBrain}_${surftype}_mpmsurf.png";
  if ( -e $canvas ) {
@@ -1105,7 +1123,7 @@ my @projectstructures; ## = getContourProjectStructures("$lContourReconPath/$pro
 my @csides = split(/\,/,$csidestring);
 my $ncsides = @csides;
 if ( $volume ) {
- print "Create local mpm volumes for ".scalar(@projects)." atlas projects...\n" if ( $verbose );
+ print "Creating local mpm volumes for ".scalar(@projects)." atlas projects...\n" if ( $verbose );
  ### setup
  my $volopts = "-in:size 256 256 256 -out:compress true";
  $volopts .= " -v" if ( $verbose );
@@ -1287,17 +1305,17 @@ if ( $surfmpm ) {
   printfatalerror "FATAL ERROR: Invalid number of sides." if ( $ncsides==0 );
   foreach my $cside (@csides) {
    next if ( $cside=="b" || $cside=="l" || $cside=="r" );
-   printfatalerror "FATAL ERROR: Invalid side specifier '$cside': $!";
+   printfatalerror "FATAL ERROR: Invalid side specifier '".$cside."': $!";
   }
   ### processing
   foreach my $cside (@csides) {
    my $numAreas = 0;
    my $plabelfile = "$plabelpath/surfatlas_${cside}.plabel";
-   print "creating atlas file '".$plabelfile."'...\n" if ( $verbose );
-   open(DAT,">$plabelfile") || printfatalerror "FATAL ERROR: Could not create atlas file '".$plabelfile."': $!";
+   print "Creating atlas file '".$plabelfile."'...\n" if ( $verbose );
+   open(DAT,">$plabelfile") || printfatalerror "FATAL ERROR: Cannot create atlas file '".$plabelfile."': $!";
    print DAT "# surface atlas plabel file\n";
    foreach my $project (@projects) {
-    print " processing project '$project'...\n" if ( $verbose );
+    print " processing project '".$project."'...\n" if ( $verbose );
     my @projectstructures = getContourProjectStructures($lContourReconPath."/".$project);
     print DAT "# project: ".$project."\n";
     print DAT "# structures: @projectstructures\n";
@@ -1312,14 +1330,14 @@ if ( $surfmpm ) {
     my @areas = getAreaDirs($prjpath,"nlin2Std${refBrainLC}",$cside,\@projectstructures);
     my $nareas = @areas;
     if ( $nareas==0 ) {
-      warn "Could not find any valid areas in '".$prjpath."'!\n";
+      warn "Cannot find any valid areas in '".$prjpath."'!\n";
       exit(1) if ( $pedantic );
     } else {
       foreach my $area (@areas) {
-       ## print "  area file '$area'...\n" if ( $verbose );
+       ## print "  area file '".$area."'...\n" if ( $verbose );
        my $datainpath = "$prjpath/$area/3d/$surfmodel/label";
        if ( ! -d $datainpath ) {
-        print "WARNING: Could not find '".$datainpath."'. skipping!\n";
+        print "WARNING: Cannot find '".$datainpath."'. skipping!\n";
         exit(1) if ( $pedantic );
         next;
        }
@@ -1328,7 +1346,7 @@ if ( $surfmpm ) {
        foreach my $file (@files) {
         if ( $file =~ m/\_edit\.dat$/i ) {
          print "  adding label file '".$file."'...\n" if ( $verbose );
-         print DAT "$datainpath/$file\n";
+         print DAT $datainpath."/".$file."\n";
          $numAreas++;
          $hasFile = 1;
          last;
@@ -1366,7 +1384,7 @@ if ( $surfmpm ) {
      ssystem("hitMeshMaxProbability $opts -in $plabelfile -out $outFile -xml $xmlFile",$debug);
      print "Created '".$outFile."' and '".$xmlFile."'.\n" if $verbose;
    }
-   ### convert into freesurfer format
+   ### convert into FreeSurfer format
    if ( $freesurfer ) {
     my @datalines = ();
     open(FPin,"<$outFile") || printfatalerror "FATAL ERROR: Cannot open '".$outFile."' for reading: $!";
@@ -1385,17 +1403,17 @@ if ( $surfmpm ) {
      }
     close(FPout);
    }
-   ### creating colormap ...
+   ### creating colormap
    my $colFile = createOutputPath($atlasDataPath."/3d/colormap");
    $colFile .= "/surfatlas_".$cside."_mpm.vcol";
    my $cmapinfofile = xml2colorfile($xmlFile,$outFile,$colFile,$uniquecolor);
    ## clustering ...
    if ( $maxcluster && $cside ne "b" ) {
-    print "maximum clustering ...\n" if $verbose;
+    print "Maximum clustering ...\n" if $verbose;
     # print "DEBUG: labelfile: '$outFile'\n";
     # print "DEBUG: meshfile:  '$refBrainMeshFiles{$cside}'\n";
     my $nColorFile = clusterLabelData($outFile,$refBrainMeshFiles{$cside},$colFile,$verbose,$debug);
-    print "created color file '".$nColorFile."' for maximum cluster.\n" if $verbose;
+    print "Created color file '".$nColorFile."' for maximum cluster.\n" if $verbose;
     $colFile = $nColorFile;
    }
    ### create output surface in coff format
@@ -1441,7 +1459,7 @@ if ( $surfmpm ) {
     if ( $legend ) {
       print " creating legend color pics '".$cmapinfofile."' ...\n" if ( $verbose );
       my @legendfiles = ();
-      open(FP,"<$cmapinfofile") || printfatalerror "FATAL ERROR: Could not open colormap info file '".$cmapinfofile."': $!";
+      open(FP,"<$cmapinfofile") || printfatalerror "FATAL ERROR: Cannot open colormap info file '".$cmapinfofile."': $!";
       while ( <FP> ) {
        chomp($_);
        my @elements = split(/\ /,$_);
@@ -1467,7 +1485,7 @@ if ( $surfmpm ) {
        $tmpfile =~ s/\.png/\_legend.png/i;
        ssystem("composite -geometry +1376+13 $legendfile $finalout $tmpfile",$debug);
        unlink($finalout);
-       move($tmpfile,$finalout) || printfatalerror "FATAL ERROR: cannot move file: $!";
+       move($tmpfile,$finalout) || printfatalerror "FATAL ERROR: Cannot move file: $!";
       }
     }
    }
