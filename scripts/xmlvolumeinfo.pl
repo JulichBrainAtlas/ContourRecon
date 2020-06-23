@@ -1,4 +1,19 @@
-# perl script to calculate basically the volume of structures
+# Copyright 2020 Forschungszentrum Jülich
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#############################################################################################################################
+# Script to compute basically the volume of structures. Saves data in a Excel file.
 #############################################################################################################################
 
 ### >>>
@@ -54,7 +69,7 @@ sub getStructures {
  my ($filename,$verbose) = @_;
  my @structures = ();
  print "Loading structure file '".$filename."'...\n" if ( $verbose );
- open(FPin,"<$filename") || printfatalerror "FATAL ERROR: Could not open structure file '".$filename."' for reading: $!";
+ open(FPin,"<$filename") || printfatalerror "FATAL ERROR: Cannot open structure file '".$filename."' for reading: $!";
   while ( <FPin> ) {
    if ( $_ =~ m/^structures/i ) {
     chomp($_);
@@ -116,12 +131,12 @@ sub getCavalieriVolumeFromFile {
  my $filename = $contourReconPath."/".$project."/docs/volumes/";
  $filename .= "cavalieri_".$structure."_".$dtype.".txt";
  if ( ! -e $filename ) {
-  # printwarning "WARNING: Could not find volume file '".$filename."': project=$project, brain=$brain, structure=$structure, type=$dtype.\n";
+  # printwarning "WARNING: Cannot find volume file '".$filename."': project=$project, brain=$brain, structure=$structure, type=$dtype.\n";
   exit(1) if ( $pedantic );
   return 0.0;
  }
  my $volume = 0.0;
- open(FPvolin,"<$filename") || printfatalerror "FATAL ERROR: Could not open '".$filename."' for reading.\n";
+ open(FPvolin,"<$filename") || printfatalerror "FATAL ERROR: Cannot open '".$filename."' for reading.\n";
   while ( <FPvolin> ) {
    my @values = split(/\ /,$_);
    if ( $values[0] eq "$brain" ) {
@@ -529,7 +544,7 @@ if ( $lCompleteAtlas ) {
       my $volume = 0.0;
       $volume = ${$volinfos{$projectbrain}}{$structure} if ( exists($volinfos{$projectbrain}) && exists(${$volinfos{$projectbrain}}{$structure}) );
       ## my $volume = getCavalieriVolumeFromFile("orig",$key,$projectbrain,$structure,$lContourReconPath,$pedantic);
-      $worksheet->write($xn,6+$yn,$volume,$fformat); #### HERE ####
+      $worksheet->write($xn,6+$yn,$volume,$fformat);
      }
      my $hbpname = "unknown";
      my $lobe = "unknown";
@@ -602,7 +617,7 @@ if ( $lCompleteAtlas ) {
         $status = $names[2];
         $sumname = $names[3];
        }
-       $worksheet->write($xn,1,$summaryname."_".$side,$format); ### STRUCTURENAME ####
+       $worksheet->write($xn,1,$summaryname."_".$side,$format);
        $worksheet->write($xn,2,$hbpname,$format);
        my $sv = ($side =~ m/^l$/i )?"0":"1";
        $worksheet->write($xn,3,$sv,$format);
@@ -614,7 +629,6 @@ if ( $lCompleteAtlas ) {
        my $cstructure = $structure;
        $cstructure =~ s/\_l$//;
        $cstructure =~ s/\_r$//;
-       ### print " >>> project=$key, structure=$cstructure\n";
        my $prjDBIdent = fetchFromAtlasDatabase($dbh,"SELECT id FROM atlas.projects WHERE name='$key'");
        my $strucDBIdent = fetchFromAtlasDatabase($dbh,"SELECT id FROM atlas.structures WHERE name='$summaryname' AND projectId='$prjDBIdent'");
        print "sum=$summaryname|$cstructure>>$strucDBIdent\n";
@@ -797,11 +811,11 @@ sub loadSectionDistance {
   my $lBrainSpecFile = $lAtlasBrainDataPath."/".$species."/postmortem/".$brain."/histo/".$brain."_info.inc";
   if ( ! -e $lBrainSpecFile ) {
    unless ( $silent ) {
-    warn "WARNING: Could not find spec file '".$lBrainSpecFile."'. using default distance '$distance'.\n";
+    warn "WARNING: Cannot find spec file '".$lBrainSpecFile."'. using default distance '$distance'.\n";
    }
    return $distance;
   }
-  open(FP,"<$lBrainSpecFile") || printfatalerror "FATAL ERROR: Could not open '".$lBrainSpecFile."': $!";
+  open(FP,"<$lBrainSpecFile") || printfatalerror "FATAL ERROR: Cannot open '".$lBrainSpecFile."': $!";
   while ( <FP> ) {
    if ( $_ =~ m/^distance=/i ) {
     chomp($_);
@@ -813,7 +827,7 @@ sub loadSectionDistance {
   }
   close(FP);
   unless ( $silent ) {
-   warn "WARNING: Could not find distance value in '".$lBrainSpecFile."'. Using default distance '".$distance."'.\n";
+   warn "WARNING: Cannot find distance value in '".$lBrainSpecFile."'. Using default distance '".$distance."'.\n";
   }
   return $distance;
 }
@@ -1006,14 +1020,11 @@ for ( @a ) {
       } elsif ( $_ =~ m/Structure\>/i ) {
        ## $areas{$areaname} .= "$sectionnumber $lArea ";
        # print ">>> $lFile - area[$areaname|$areaparity]=$lArea \n";
-       # das ist leider zu einfach gedacht: es k\F6nnen auch onlyinner strukturen vorhanden sein,
-       # die sich nicht innerhalb einer onlyouter struktur befinden !!! Diese duerfen nicht
-       # abgezogen werden !!!
        if ( ! $isOnlyInnerOuter ) {
         $lAreas{$areaname} .= $lArea." ";
        } else {
         chop($xycoords); ## remove trace separator at the end
-        print " + add xydata $xycoords to area $areaname...\n" if ( $verbose );
+        print " + add xydata ".$xycoords." to area ".$areaname."...\n" if ( $verbose );
         $xydata{$areaname} = $xycoords;
        }
        $xycoords = "";
@@ -1052,25 +1063,25 @@ for ( @a ) {
       }
       my $nOnlyInner = scalar(@onlyInnerDatas);
       my $nOnlyOuter = scalar(@onlyOuterDatas);
-      print FPAreaLogout "  + found structure '$onlystructure' with $nOnlyInner onlyinner and $nOnlyOuter onlyouter structure traces...\n";
+      print FPAreaLogout "  + found structure '".$onlystructure."' with $nOnlyInner onlyinner and $nOnlyOuter onlyouter structure traces...\n";
       # foreach structure in xmlfile
       if ( $nOnlyInner>0 && $nOnlyOuter==0 ) {
-       print FPAreaLogout "   + processing onlyinner only overlay of structure $onlystructure...\n";
+       print FPAreaLogout "   + processing onlyinner only overlay of structure ".$onlystructure."...\n";
        foreach my $onlyInnerData (@onlyInnerDatas) {
         my $area2 = getArea2($onlyInnerData);
-        print FPAreaLogout "    + adding area $area2 to structure $onlystructure...\n";
+        print FPAreaLogout "    + adding area $area2 to structure ".$onlystructure."...\n";
         $lAreas{$onlystructure} .= $area2." ";
        }
       } elsif ( $nOnlyInner==0 && $nOnlyOuter>0 ) {
-       print FPAreaLogout "  + processing onlyouter only overlay of structure $onlystructure...\n";
+       print FPAreaLogout "  + processing onlyouter only overlay of structure ".$onlystructure."...\n";
        foreach my $onlyOuterData (@onlyOuterDatas) {
         my $area2 = getArea2($onlyOuterData);
-        print FPAreaLogout "    + adding area $area2 to structure $onlystructure...\n";
+        print FPAreaLogout "    + adding area $area2 to structure ".$onlystructure."...\n";
         $lAreas{$onlystructure} .= $area2." ";
        }
       } elsif ( $nOnlyInner>0 && $nOnlyOuter>0 ) {
        ### looking for pairs A_i and A_j then we can use the formular: ||A_i-A_j||
-       print FPAreaLogout "    + analyzing onlyinner/onlyouter overlap of structure $onlystructure...\n";
+       print FPAreaLogout "    + analyzing onlyinner/onlyouter overlap of structure ".$onlystructure."...\n";
        ### getting pairs (this is experimental!!!)
        my %nOnlyInnerDataOverlap = ();
        my %nOnlyOuterDataOverlap = ();
@@ -1591,7 +1602,7 @@ move($lExcelFileName,$lProjectPath."/".basename($lExcelFileName)) || printfatale
 my $allAreasVolumePath = $lContourReconPath."/allareas/docs/volumes";
 if ( -d $allAreasVolumePath ) {
  copy($lProjectPath."/".$lExcelFileName,$allAreasVolumePath) ||
-            printfatalerror "FATAL ERROR: Could not copy excel file: $!";
+            printfatalerror "FATAL ERROR: Cannot copy excel file: $!";
 }
 print "Saved Excel file '".$lProjectPath."/".basename($lExcelFileName)."'.\n" if ( $verbose );
 $dbh->disconnect();
